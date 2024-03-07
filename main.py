@@ -62,7 +62,7 @@ class FACELOADING:
         plt.show()
 
 
-faceloading = FACELOADING('./train/Images')
+faceloading = FACELOADING('./train')
 X,Y = faceloading.load_classes()
 faceloading.plot_images()
 
