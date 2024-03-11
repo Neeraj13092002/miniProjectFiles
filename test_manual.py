@@ -3,7 +3,9 @@ import numpy as np
 import pickle
 from mtcnn.mtcnn import MTCNN
 from keras_facenet import FaceNet
-from datetime import datetime
+import tkinter as tk
+from tkinter import filedialog
+
 # Load the pre-trained model using pickle
 with open('face_recognition_model', 'rb') as f:
     loaded_model, encoder = pickle.load(f)
@@ -20,43 +22,47 @@ def get_embedding(face_image):
     yhat = embedder.embeddings(face_image)
     return yhat[0]  # 512D Image
 
-def process_frame(frame):
-    # Detect faces in the frame
+def process_image(image_path):
+    # Load the image
+    test_image = cv.imread(image_path)
+    test_image = cv.cvtColor(test_image, cv.COLOR_BGR2RGB)
 
-    faces = detector.detect_faces(frame)
-    print(faces)
+    # Detect faces in the image
+    faces = detector.detect_faces(test_image)
+
     # Iterate over detected faces
     for face_info in faces:
         x, y, w, h = face_info['box']
         x2, y2 = x + w, y + h
+
         # Crop the face region
-        face_region = frame[y:y2, x:x2]
+        face_region = test_image[y:y2, x:x2]
+
         # Resize the face region to 160x160
         face_region = cv.resize(face_region, (160, 160))
+
         # Get the FaceNet embedding for the face
         test_image_embed = get_embedding(face_region).reshape(1, -1)
+
         # Predict the class label using the loaded model
         class_label = encoder.inverse_transform(loaded_model.predict(test_image_embed))[0]
+
         # Draw a rectangle around the face
-        cv.rectangle(frame, (x, y), (x2, y2), (0, 255, 0), 2)
-        # Write the class label on the frame
-        cv.putText(frame, str(class_label), (x, y - 10), cv.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-    # Display the frame with face detection and class labels
-    cv.imshow('Real-Time Face Recognition', frame)
+        cv.rectangle(test_image, (x, y), (x2, y2), (0, 255, 0), 2)
 
-def real_time_face_recognition():
-    cap = cv.VideoCapture(0)  # Open webcam
-    while True:
-        ret, frame = cap.read()  # Read frame from webcam
-        if not ret:
-            break
+        # Write the class label on the image
+        cv.putText(test_image, str(class_label), (x, y - 10), cv.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
-        process_frame(frame)
-
-        if cv.waitKey(1) & 0xFF == ord('q'):  # Press 'q' to exit
-            break
-
-    cap.release()  # Release the webcam
+    # Display the image with face detection and class labels
+    cv.imshow('Test Image', cv.cvtColor(test_image, cv.COLOR_RGB2BGR))
+    cv.waitKey(0)
     cv.destroyAllWindows()
 
-real_time_face_recognition()
+def load_image_gui():
+    root = tk.Tk()
+    root.withdraw()
+    file_path = filedialog.askopenfilename()
+    if file_path:
+        process_image(file_path)
+
+load_image_gui()
