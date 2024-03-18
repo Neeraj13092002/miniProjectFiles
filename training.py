@@ -1,10 +1,9 @@
-import tensorflow as tf
 import cv2 as cv
 import numpy as np
 import os
-import matplotlib.pyplot as plt
+import time
 import pickle
-from mtcnn.mtcnn import MTCNN
+from mtcnn_ort import MTCNN
 from keras_facenet import FaceNet
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
@@ -23,6 +22,7 @@ class FACELOADING:
     def extract_face(self, filename):
         img = cv.imread(filename)
         img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+
         x,y,w,h = self.detector.detect_faces(img)[0]['box']
         x,y = abs(x), abs(y)
         face = img[y:y+h, x:x+w]
@@ -51,20 +51,12 @@ class FACELOADING:
 
         return np.asarray(self.X), np.asarray(self.Y)
 
-    def plot_images(self):
-        plt.figure(figsize = (16,12))
-        for num,image in enumerate(self.X):
-            ncols = 3
-            nrows = (len(self.Y)//ncols) + 1
-            plt.subplot(nrows, ncols, num+1)
-            plt.imshow(image)
-            plt.axis('off')
-        plt.show()
 
-
+time1 = time.time()
 faceloading = FACELOADING('./train')
 X,Y = faceloading.load_classes()
-faceloading.plot_images()
+time2 = time.time()
+print(f"{time2-time1}s")
 
 embedder = FaceNet()
 detector = MTCNN()
@@ -91,9 +83,6 @@ print(Y)
 #Splitting the data for training and testing
 X_train,X_test,Y_train,Y_test = train_test_split(EMBEDDED_X,Y, shuffle=True, random_state=20)
 
-# Flatten the images in X_train and X_test
-X_train_flat = np.array([image.flatten() for image in X_train])
-X_test_flat = np.array([image.flatten() for image in X_test])
 
 # Train the SVC model using flattened data
 model = SVC(kernel='linear', probability=True)
