@@ -3,9 +3,10 @@ import pykinect_azure as pykinect
 import cv2 as cv
 import numpy as np
 import pickle
-from mtcnn import MTCNN
+from mtcnn_ort import MTCNN
 from keras_facenet import FaceNet
 import threading
+
 # Load the pre-trained model using pickle
 with open('face_recognition_model', 'rb') as f:
     loaded_model, encoder = pickle.load(f)
@@ -82,6 +83,15 @@ def real_time_face_recognition():
         if cv.waitKey(1) & 0xFF == ord('q'):  # Press 'q' to exit
             break
     cv.destroyAllWindows()
+
+def capture_data():
+    # Get capture
+    capture = device.update()
+    ret_ir, ir_frame = capture.get_ir_image()  # IR image
+    ret_rgb, rgb_frame = capture.get_color_image()  # RGB image
+
+    # rgb_frame = cv2.cvtColor(rgb_frame, cv2.COLOR_YUV2)
+    return ir_frame, rgb_frame, ret_rgb
 
 readimagethread = threading.Thread(target=real_time_face_recognition)
 readimagethread.start()

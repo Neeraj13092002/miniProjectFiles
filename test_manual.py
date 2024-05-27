@@ -1,7 +1,7 @@
 import cv2 as cv
 import numpy as np
 import pickle
-from mtcnn.mtcnn import MTCNN
+from mtcnn_ort import MTCNN
 from keras_facenet import FaceNet
 import tkinter as tk
 from tkinter import filedialog
